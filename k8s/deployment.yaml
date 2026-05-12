@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bedrock-chat
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bedrock-chat
+  template:
+    metadata:
+      labels:
+        app: bedrock-chat
+    spec:
+      containers:
+      - name: bedrock-chat
+        image: REPLACE_WITH_ECR_IMAGE_URI
+        ports:
+        - containerPort: 8000
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
