@@ -14,9 +14,12 @@ spec:
     spec:
       containers:
       - name: bedrock-chat
-        image: REPLACE_WITH_ECR_IMAGE_URI
+        image: 451978385657.dkr.ecr.us-east-1.amazonaws.com/bedrock-chat:latest
         ports:
         - containerPort: 8000
+        envFrom:
+        - secretRef:
+            name: anthropic-secret
         readinessProbe:
           httpGet:
             path: /health
