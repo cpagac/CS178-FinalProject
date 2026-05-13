@@ -1,4 +1,4 @@
-# Bedrock Chat
+# CS178 Chat App
 
 A cloud-native chat application that streams responses from **Claude 3 Haiku** via AWS Bedrock. Built as the CS178 (Cloud Computing and Database Systems) final project at Drake University.
 
