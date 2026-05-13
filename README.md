@@ -1,10 +1,10 @@
 # CS178 Chat App
 
-A cloud-native chat application that streams responses from **Claude 3 Haiku** via AWS Bedrock. Built as the CS178 (Cloud Computing and Database Systems) final project at Drake University.
+A cloud-native chat application powered by **Anthropic Claude Haiku**. Built as the CS178 (Cloud Computing and Database Systems) final project at Drake University.
 
 ## What It Does
 
-Users open a static web page, type a message, and receive an AI-generated response. The frontend calls a REST API running in Kubernetes; the API forwards the request to AWS Bedrock and returns the model's reply.
+Users open a static web page, type a message, and receive an AI-generated response. The frontend calls a REST API running in Kubernetes; the API forwards the request to the Anthropic API and returns the model's reply.
 
 ## Tech Stack
 
@@ -12,7 +12,7 @@ Users open a static web page, type a message, and receive an AI-generated respon
 |---|---|
 | Frontend | Static HTML/JS hosted on Amazon S3 |
 | Backend | FastAPI (Python) running on Amazon EKS |
-| AI Model | Claude 3 Haiku via AWS Bedrock |
+| AI Model | Claude Haiku via Anthropic API |
 | Container | Docker, pushed to Amazon ECR |
 | Orchestration | Kubernetes (Amazon EKS) |
 
@@ -29,21 +29,21 @@ EKS LoadBalancer  (AWS Network Load Balancer)
   │
   ▼
 FastAPI Pod  (Kubernetes Deployment, 2 replicas)
-  │  boto3 InvokeModel API
+  │  Anthropic Python SDK
   ▼
-AWS Bedrock  (Claude 3 Haiku — us-east-1)
+Anthropic API  (Claude Haiku)
 ```
 
 ## Local Development
 
-**Prerequisites:** Python 3.11+, AWS credentials configured (`~/.aws/credentials` or environment variables) with Bedrock access in `us-east-1`.
+**Prerequisites:** Python 3.11+, Anthropic API key from [console.anthropic.com](https://console.anthropic.com).
 
 ```bash
 # Install dependencies
 pip install -r backend/requirements.txt
 
 # Start the API
-uvicorn backend.main:app --reload --port 8000
+ANTHROPIC_API_KEY=your_key_here uvicorn backend.main:app --reload --port 8000
 ```
 
 Open `frontend/index.html` in a browser and point it at `http://localhost:8000`.
@@ -51,21 +51,21 @@ Open `frontend/index.html` in a browser and point it at `http://localhost:8000`.
 ## Deployment
 
 1. **Install tools** — AWS CLI, `eksctl`, `kubectl`, Docker
-2. **Configure AWS** — `aws configure` with an IAM user that has EKS, ECR, Bedrock, and S3 permissions
-3. **Create EKS cluster** — `eksctl create cluster --name bedrock-chat --region us-east-1 --nodes 2`
+2. **Configure AWS** — `aws configure` with an IAM user that has EKS, ECR, and S3 permissions
+3. **Create EKS cluster** — `eksctl create cluster --name bedrock-chat --region us-east-1 --nodes 2 --node-type t3.micro`
 4. **Build and push image to ECR**
    ```bash
    aws ecr create-repository --repository-name bedrock-chat
-   docker build -t bedrock-chat ./backend
+   docker buildx build --platform linux/amd64 -t bedrock-chat ./backend
    docker tag bedrock-chat:latest <account>.dkr.ecr.us-east-1.amazonaws.com/bedrock-chat:latest
    docker push <account>.dkr.ecr.us-east-1.amazonaws.com/bedrock-chat:latest
    ```
-5. **Apply Kubernetes manifests** — `kubectl apply -f k8s/`
-6. **Host frontend on S3** — create a public bucket with static website hosting enabled, upload `frontend/index.html`, and update the API URL in the file to the EKS LoadBalancer DNS name
+5. **Create Kubernetes secret** — `kubectl create secret generic anthropic-secret --from-literal=ANTHROPIC_API_KEY=your_key`
+6. **Apply Kubernetes manifests** — `kubectl apply -f k8s/`
+7. **Host frontend on S3** — create a public bucket with static website hosting enabled, upload `frontend/index.html`, and update `BACKEND_URL` in the file to the EKS LoadBalancer DNS name
 
 ## Key AWS Services
 
 - **Amazon S3** — zero-ops static hosting for the frontend
 - **Amazon EKS** — managed Kubernetes control plane for the backend
 - **Amazon ECR** — private container registry for the Docker image
-- **AWS Bedrock** — serverless access to Claude 3 Haiku; no GPU infrastructure to manage
