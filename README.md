@@ -2,6 +2,10 @@
 
 A cloud-native chat application powered by **Anthropic Claude Haiku**. Built as the CS178 (Cloud Computing and Database Systems) final project at Drake University.
 
+## Live Demo
+
+**Frontend:** http://bedrock-chat-frontend-coleman.s3-website-us-east-1.amazonaws.com
+
 ## What It Does
 
 Users open a static web page, type a message, and receive an AI-generated response. The frontend calls a REST API running in Kubernetes; the API forwards the request to the Anthropic API and returns the model's reply.
